@@ -1,0 +1,10 @@
+UTXO stores 
+- Hash(public key)
+
+when spending, provide 
+- public keyt + signature
+
+Validation 
+- Hash(provided public key) == hash(public key) # stored in utxo
+- Take signature and public key and transaction hash
+

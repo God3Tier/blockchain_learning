@@ -1,19 +1,13 @@
-use crate::blockchain::{
-    transaction::Transaction, 
-    hash::HashStruct
-};
+use crate::blockchain::{hash::HashStruct, transaction::Transaction};
 
 pub struct BlockBody {
-    transactions: Vec<Transaction> 
+    transactions: Vec<Transaction>,
 }
 
 impl BlockBody {
     pub fn new(transactions: Vec<Transaction>) -> Self {
-        BlockBody {
-            transactions
-        }
+        BlockBody { transactions }
     }
-
 
     pub fn get_hash(&self) -> HashStruct {
         let mut store = Vec::new();
@@ -27,13 +21,16 @@ impl BlockBody {
         }
 
         while store.len() != 1 {
-            let temp: Vec<HashStruct> = store.drain(0..).collect();
+            let mut temp: Vec<HashStruct> = std::mem::take(&mut store);
 
             for i in 0..temp.len() / 2 {
-                store.push(HashStruct::rehash_from_2(&temp[i * 2], &temp[i * 2 + 1]))
+                store.push(HashStruct::rehash_from_2(
+                    std::mem::take(&mut temp[i * 2]),
+                    std::mem::take(&mut temp[i * 2 + 1]),
+                ))
             }
         }
 
-        return std::mem::take(&mut store[0])
+        std::mem::take(&mut store[0])
     }
 }

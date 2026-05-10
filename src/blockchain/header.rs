@@ -1,10 +1,10 @@
 use crate::blockchain::hash::HashStruct;
 
 pub struct Header {
-    pub parent: HashStruct, 
-    pub merkle_root: HashStruct, 
+    pub parent: HashStruct,
+    pub merkle_root: HashStruct,
     pub state_root: HashStruct,
-    time_stamp: std::time::SystemTime, 
+    time_stamp: std::time::SystemTime,
 }
 
 impl Header {
@@ -12,9 +12,8 @@ impl Header {
         Header {
             parent,
             merkle_root,
-            state_root, 
-            time_stamp: std::time::SystemTime::now()
+            state_root,
+            time_stamp: std::time::SystemTime::now(),
         }
     }
-    
 }
