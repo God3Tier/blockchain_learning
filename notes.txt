@@ -8,3 +8,31 @@ Validation
 - Hash(provided public key) == hash(public key) # stored in utxo
 - Take signature and public key and transaction hash
 
+Wallet thread                   Mempool                   Miner thread          Node/Validator
+─────────────────                ────────────────            ─────────────────     ─────────────────
+create_transaction()
+  - reads utxo_set
+  - builds Tx struct
+  - signs it
+        │
+        └──── broadcast Tx ──→  mempool
+                                (Arc<RwLock<Vec<Tx>>>)
+                                                  │
+                                     miner reads mempool
+                                     picks Txs to include
+                                     assembles block header
+                                     grinds nonce until
+                                     hash meets difficulty
+                                                  │
+                                                  └──→ broadcast Block
+                                                              │
+                                                         node validates
+                                                         - each Tx sig valid?
+                                                         - inputs unspent?
+                                                         - amounts add up?
+                                                              │
+                                                         apply_transaction()
+                                                         - remove inputs
+                                                         from utxo_set
+                                                         - add outputs
+                                                         to utxo_set

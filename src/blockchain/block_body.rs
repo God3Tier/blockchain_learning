@@ -21,12 +21,12 @@ impl BlockBody {
         }
 
         while store.len() != 1 {
-            let mut temp: Vec<HashStruct> = std::mem::take(&mut store);
+            let temp: Vec<HashStruct> = std::mem::take(&mut store);
 
             for i in 0..temp.len() / 2 {
                 store.push(HashStruct::rehash_from_2(
-                    std::mem::take(&mut temp[i * 2]),
-                    std::mem::take(&mut temp[i * 2 + 1]),
+                    &temp[i * 2],
+                    &temp[i * 2 + 1],
                 ))
             }
         }
