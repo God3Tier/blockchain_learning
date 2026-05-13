@@ -1,6 +1,6 @@
 mod account;
 mod blockchain_features;
-mod state_machine;
+mod engine;
 mod utxo_set;
 
 use crate::blockchain_features::hash::HashStruct;

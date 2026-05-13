@@ -1,5 +1,3 @@
-mod blockchain_state; 
-
 pub trait StateMachine {
     type State;
     type Transition;

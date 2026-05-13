@@ -5,6 +5,7 @@ pub struct Header {
     pub merkle_root: HashStruct,
     pub state_root: HashStruct,
     time_stamp: std::time::SystemTime,
+    
 }
 
 impl Header {
