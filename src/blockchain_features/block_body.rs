@@ -1,4 +1,4 @@
-use crate::blockchain::{hash::HashStruct, transaction::Transaction};
+use crate::blockchain_features::{hash::HashStruct, transaction::Transaction};
 
 pub struct BlockBody {
     transactions: Vec<Transaction>,

@@ -10,7 +10,7 @@ use crate::{
     utxo_set::{
         UtxoSet, 
     }, 
-    blockchain::{hash::HashStruct, scripts::{LockingScript, UnlockingScript, KeyPair}}
+    blockchain_features::{hash::HashStruct, scripts::{LockingScript, UnlockingScript, KeyPair}}
 };
 
 pub struct TxInput {

@@ -6,7 +6,7 @@ use std::{
 };
 use crate::{
     utxo_set::utxo::Utxo, 
-    blockchain::scripts::{UnlockingScript, LockingScript, KeyPair}
+    blockchain_features::scripts::{UnlockingScript, LockingScript, KeyPair}
 };
 use crate::Error;
 pub struct UtxoSet {

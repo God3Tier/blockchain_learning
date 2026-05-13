@@ -1,7 +1,7 @@
 use crate::{
-    blockchain::hash::HashStruct,
-    blockchain::transaction::Transaction,
-    blockchain::{block_body::BlockBody, header::Header},
+    blockchain_features::hash::HashStruct,
+    blockchain_features::transaction::Transaction,
+    blockchain_features::{block_body::BlockBody, header::Header},
 };
 
 pub struct Block {
@@ -31,5 +31,26 @@ impl Block {
             header: self.header.child(entrinsic_root, state_root),
             body: block_body
         }
-    }    
+    }
+
+    pub fn verify_sub_chain(&self, blocks: &[Block]) -> bool {
+        if blocks.is_empty() {
+            return true
+        }
+
+        let mut iterator = self;
+
+        for chain in blocks {
+            if chain.header.parent != iterator.header.hash() {
+                return false; 
+            }
+
+            // TODO: You need to also verify the block 
+            
+            iterator = chain; 
+        }
+
+        
+        true
+    }
 }

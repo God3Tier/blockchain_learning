@@ -1,5 +1,5 @@
 use secp256k1::{SecretKey, PublicKey};
-use crate::blockchain::hash::HashStruct;
+use crate::blockchain_features::hash::HashStruct;
 
 pub struct KeyPair {
     pub private_key: SecretKey, 

@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::blockchain::scripts::{UnlockingScript, LockingScript, KeyPair};
+use crate::blockchain_features::scripts::{UnlockingScript, LockingScript, KeyPair};
 
 pub struct Utxo {
     pub value: i32, 

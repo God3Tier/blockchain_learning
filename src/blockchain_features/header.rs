@@ -1,4 +1,4 @@
-use crate::blockchain::hash::HashStruct;
+use crate::blockchain_features::hash::HashStruct;
 
 pub struct Header {
     pub parent: HashStruct,
