@@ -3,8 +3,6 @@ use std::sync::{
     RwLock
 };
 
-use secp256k1::{Message};
-
 use crate::{
     Error, 
     utxo_set::{
@@ -50,7 +48,7 @@ impl Transaction {
         for input in inputs.iter_mut() {
             input.unlocking_script = Some(UnlockingScript::SimpleHash{
                 pubkey: user_key.public_key, 
-                signature: user_key.private_key.sign_ecdsa(Message::from_digest(transaction_id.as_bytes())).to_string()
+                signature: user_key.sign(&transaction_id.as_bytes())
             })
         }
         

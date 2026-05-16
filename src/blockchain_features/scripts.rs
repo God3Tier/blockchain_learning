@@ -1,21 +1,29 @@
-use secp256k1::{SecretKey, PublicKey};
+use ed25519_dalek::{SigningKey, VerifyingKey, Signer, Signature, Verifier};
 use crate::blockchain_features::hash::HashStruct;
 
 pub struct KeyPair {
-    pub private_key: SecretKey, 
-    pub public_key: PublicKey,
+    private_key: SigningKey, 
+    pub public_key: VerifyingKey,
 }
 
 impl KeyPair {
     pub fn pubkey_hash(&self) -> HashStruct {
-        HashStruct::generate_hash(String::from_utf8(self.public_key.serialize().into_iter().collect::<Vec<u8>>()).unwrap())
+        HashStruct::generate_hash(String::from_utf8(self.public_key.as_bytes().into_iter().map(|&a| a).collect::<Vec<u8>>()).unwrap())
+    }
+
+    pub fn sign(&self, msg: &[u8]) -> String {
+        self.private_key.sign(msg).to_string()
+    }
+
+    pub fn verify(&self, message: &[u8], signature: &Signature) -> bool {
+        self.public_key.verify(message, signature).is_ok()
     }
 }
 
 #[derive(Clone)]
 pub enum UnlockingScript {
     SimpleHash {
-        pubkey: PublicKey,
+        pubkey: VerifyingKey,
         signature: String
     },
     Default
@@ -35,7 +43,7 @@ impl UnlockingScript {
     pub fn as_bytes(&self) -> Vec<u8> {
         match self {
             UnlockingScript::SimpleHash{pubkey, signature} => {
-                signature.as_bytes().into_iter().chain(pubkey.serialize().iter()).map(|&a| a).collect::<Vec<u8>>()
+                signature.as_bytes().into_iter().chain(pubkey.as_bytes().iter()).map(|&a| a).collect::<Vec<u8>>()
             }
             UnlockingScript::Default => {
                 vec!(0)

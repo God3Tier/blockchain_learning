@@ -43,4 +43,4 @@ impl PartialEq for HashStruct {
 
         true
     }
-} 
+}
