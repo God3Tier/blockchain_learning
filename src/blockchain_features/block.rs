@@ -2,6 +2,7 @@ use crate::{
     blockchain_features::hash::HashStruct,
     blockchain_features::transaction::Transaction,
     blockchain_features::{block_body::BlockBody, header::Header},
+    consensus_engine::Digest
 };
 
 pub struct Block<Digest> {
@@ -9,19 +10,19 @@ pub struct Block<Digest> {
     body: BlockBody,
 }
 
-impl<Digest> Block<Digest> {
+impl<D: Digest> Block<D> {
     pub fn genesis() -> Self {
         let parent = HashStruct::default();
         let first_transaction = Transaction::default();
         // TODO: Make sure the state_root is the appropriate HashStruct rather than it's current placeholderqw
         Block {
-            header: Header::new(parent, first_transaction.get_hash(), HashStruct::default()),
+            header: Header::new(parent, first_transaction.get_hash(), HashStruct::default(), D::genesis(), 0),
             body: BlockBody::new(vec![first_transaction]),
         }
     }
 
     // TODO: Actually put the state parameter
-    pub fn child(&self, transactions: Vec<Transaction>, state: u32, consenses: Digest) -> Self {
+    pub fn child(&self, transactions: Vec<Transaction>, state: u32, consenses: D) -> Self {
         let block_body = BlockBody::new(transactions);
         let entrinsic_root = block_body.get_hash();
         let state_root = HashStruct::generate_hash(state.to_string());
@@ -32,7 +33,7 @@ impl<Digest> Block<Digest> {
         }
     }
 
-    pub fn verify_sub_chain(&self, blocks: &[Block<Digest>]) -> bool {
+    pub fn verify_sub_chain(&self, blocks: &[Block<D>]) -> bool {
         if blocks.is_empty() {
             return true
         }

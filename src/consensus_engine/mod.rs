@@ -3,11 +3,16 @@ pub mod dictator;
 pub mod poa;
 pub mod hybrid;
 pub mod grandpa;
+pub mod forked; 
 
 use crate::blockchain_features::{header::Header};
 
+pub trait Digest {
+    fn genesis() -> Self;  
+}
+
 pub trait Consensus {
-    type Digest: Clone + std::fmt::Debug + Eq + PartialEq + std::hash::Hash;
+    type Digest: Clone + std::fmt::Debug + Eq + PartialEq + std::hash::Hash + Digest;
 
     fn validate(&self, parent_digest: &Self::Digest, header: &Header<Self::Digest>) -> bool; 
     

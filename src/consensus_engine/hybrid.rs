@@ -1,3 +1,4 @@
+
 use ed25519_dalek::{VerifyingKey, Verifier, Signature, Signer, SigningKey}; 
 
 use super::{poa::{Poa, SlotDigest}, grandpa::{GrandpaResult}, Consensus};
@@ -12,6 +13,15 @@ pub struct Hybrid {
 pub struct HybridDigest {
     pub babe_digest: SlotDigest, 
     pub grandpa: Option<GrandpaResult>
+}
+
+impl super::Digest for HybridDigest {
+    fn genesis() -> Self {
+        HybridDigest {
+            babe_digest: SlotDigest::genesis(), 
+            grandpa: None
+        }
+    }
 }
 
 impl Hybrid {
@@ -51,26 +61,16 @@ impl Consensus for Hybrid {
             return false
         }
 
-        if let Some(result) = &header.consensus_digest.grandpa  {
-            if !self.validate_grandpa(result) {
-                return false
-            }
+        if let Some(result) = &header.consensus_digest.grandpa && !self.validate_grandpa(result) {
+            return false
         }
         
         true
     }
     
     fn seal(&self, parent_digest: &Self::Digest, partial_header: Header<()>) -> Option<Header<Self::Digest>> {
-        let seal = self.babe.seal(&parent_digest.babe_digest, partial_header)?;
-
-        if parent_digest.grandpa.is_none() {
-            return Some(Header::new(partial_header.parent.clone(), partial_header.merkle_root, partial_header.state_root, HybridDigest {babe_digest: seal.consensus_digest, grandpa: None} , partial_header.block_number));
-        }
-
-        let grandpa = GrandpaResult::new()
-        
-        return Some(Header::new(partial_header.parent.clone(), partial_header.merkle_root, partial_header.state_root, HybridDigest {babe_digest: seal.consensus_digest, grandpa: Some()} , partial_header.block_number));
-
+        let seal = self.babe.seal(&parent_digest.babe_digest, partial_header.clone())?;
+        Some(Header::new(partial_header.parent.clone(), partial_header.merkle_root, partial_header.state_root, HybridDigest {babe_digest: seal.consensus_digest, grandpa: None} , partial_header.block_number))
     }
     
 }

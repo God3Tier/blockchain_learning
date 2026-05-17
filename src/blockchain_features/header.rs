@@ -1,5 +1,6 @@
 use crate::blockchain_features::hash::HashStruct;
 
+#[derive(Clone)]
 pub struct Header<Digest> {
     pub parent: HashStruct,
     pub merkle_root: HashStruct,
@@ -11,7 +12,7 @@ pub struct Header<Digest> {
 }
 
 impl<Digest> Header<Digest> {
-
+    
     pub fn from_digest<NewDigest>(&self, digest: NewDigest) -> Header<NewDigest> {
         Header {
             parent: self.parent.clone(), 

@@ -9,6 +9,12 @@ pub struct Pow {
      threshold: u64
 }
 
+impl super::Digest for u64 {
+    fn genesis() -> Self {
+        0
+    }
+}
+
 impl Consensus for Pow {
     type Digest = u64; 
 

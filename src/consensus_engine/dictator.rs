@@ -1,19 +1,22 @@
 use ed25519_dalek::{VerifyingKey, Verifier, Signature, Signer, SigningKey};
-use crate::{consensus_engine::Consensus, blockchain_features::header::Header};
+use crate::{consensus_engine::{Consensus, Digest}, blockchain_features::header::Header};
 
 pub struct Dictator {
     public_key: VerifyingKey, 
     my_signing_key: Option<SigningKey>
 }
 
+impl Digest for Vec<u8> {
+    fn genesis() -> Vec<u8> {
+        Vec::new()
+    }
+}
+
 impl Consensus for Dictator {
     type Digest = Vec<u8>; 
 
     fn validate(&self, _: &Self::Digest, header: &Header<Self::Digest>) -> bool {
-        let signature_bytes: Option<[u8; 64]> = match header.consensus_digest.as_slice().try_into() {
-            Ok(bytes) => Some(bytes),
-            Err(_) => None
-        };
+        let signature_bytes: Option<[u8; 64]> =  header.consensus_digest.as_slice().try_into().ok(); 
 
         if signature_bytes.is_none(){
             return false
@@ -32,7 +35,7 @@ impl Consensus for Dictator {
 
         let signature = self.my_signing_key.as_ref().unwrap().sign(&bytes).to_string().as_bytes().into();
         
-        return Some(Header::new(partial_header.parent.clone(), partial_header.merkle_root, partial_header.state_root, signature, partial_header.block_number))
+        Some(Header::new(partial_header.parent.clone(), partial_header.merkle_root, partial_header.state_root, signature, partial_header.block_number))
     }
 
 }
