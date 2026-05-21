@@ -11,6 +11,10 @@ pub trait Digest {
     fn genesis() -> Self;  
 }
 
+impl Digest for () { 
+    fn genesis() -> Self {}
+}
+
 pub trait Consensus {
     type Digest: Clone + std::fmt::Debug + Eq + PartialEq + std::hash::Hash + Digest;
 

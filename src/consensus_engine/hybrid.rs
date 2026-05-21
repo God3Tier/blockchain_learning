@@ -61,11 +61,11 @@ impl Consensus for Hybrid {
             return false
         }
 
-        if let Some(result) = &header.consensus_digest.grandpa && !self.validate_grandpa(result) {
-            return false
+        if let Some(result) = &header.consensus_digest.grandpa {
+            return self.validate_grandpa(result)
         }
         
-        true
+        false
     }
     
     fn seal(&self, parent_digest: &Self::Digest, partial_header: Header<()>) -> Option<Header<Self::Digest>> {
