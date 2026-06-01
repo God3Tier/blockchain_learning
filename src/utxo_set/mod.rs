@@ -60,3 +60,14 @@ impl UtxoSet {
     }
     
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn initialise_creates_empty_set() {
+        let s = UtxoSet::initialise();
+        assert!(s.set.is_empty());
+    }
+}

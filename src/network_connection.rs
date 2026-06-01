@@ -22,3 +22,21 @@ impl Node {
         
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    #[should_panic]
+    fn new_is_unimplemented() {
+        // Node::new currently calls todo!(), which should panic
+        let _ = Node::new();
+    }
+
+    #[test]
+    #[should_panic]
+    fn create_dummy_node_is_unimplemented() {
+        let _ = Node::create_dummy_node();
+    }
+}

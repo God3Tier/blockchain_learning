@@ -75,3 +75,22 @@ impl LockingScript {
         
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn locking_script_default_as_bytes() {
+        let ls = LockingScript::Default;
+        assert_eq!(ls.as_bytes(), vec!(0));
+    }
+
+    #[test]
+    fn unlocking_script_default_behaviour() {
+        let us = UnlockingScript::Default;
+        let ls = LockingScript::Default;
+        assert!(!us.verify(&ls));
+        assert_eq!(us.as_bytes(), vec!(0));
+    }
+}
