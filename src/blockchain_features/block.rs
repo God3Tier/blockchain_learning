@@ -54,3 +54,23 @@ impl<D: Digest> Block<D> {
         true
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    #[ignore]
+    fn genesis_constructs_block_for_unit_digest() {
+        // Ignored until Transaction::get_hash is implemented
+        let _g: Block<()> = Block::genesis();
+    }
+
+    #[test]
+    #[ignore]
+    fn verify_sub_chain_empty_returns_true() {
+        // Ignored until Transaction::get_hash is implemented
+        let g: Block<()> = Block::genesis();
+        assert!(g.verify_sub_chain(&[]));
+    }
+}

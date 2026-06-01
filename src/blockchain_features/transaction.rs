@@ -83,3 +83,16 @@ impl Transaction {
         todo!("Implement hash function for the transaction")
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    #[ignore]
+    fn transaction_get_hash_is_unimplemented() {
+        // Ignored until Transaction::get_hash is implemented
+        let tx = Transaction::default();
+        let _ = tx.get_hash();
+    }
+}

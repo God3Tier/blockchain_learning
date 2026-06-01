@@ -70,4 +70,16 @@ mod tests {
         let s = UtxoSet::initialise();
         assert!(s.set.is_empty());
     }
+
+    #[test]
+    fn add_and_remove_utxo_behaviour() {
+        let mut s = UtxoSet::initialise();
+        let id = (1u32, 1u32);
+        // add a default locking script
+        let res = s.add_utxo(id, 10, LockingScript::Default);
+        assert!(res.is_ok());
+        // removing with UnlockingScript::Default should fail verification and return Err
+        let rem = s.remove_utxo(id, &UnlockingScript::Default);
+        assert!(rem.is_err());
+    }
 }
