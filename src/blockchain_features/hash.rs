@@ -27,7 +27,6 @@ impl std::fmt::Display for HashStruct{
         write!(f, "{}", String::from_utf8(self.0.into_iter().collect::<Vec<u8>>()).unwrap())
     }
 }
-
 impl PartialEq for HashStruct {
     fn eq(&self, other: &Self) -> bool {
 
