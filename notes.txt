@@ -36,3 +36,73 @@ create_transaction()
                                                          from utxo_set
                                                          - add outputs
                                                          to utxo_set
+
+
+The codebase models a state machine via the `StateMachine` trait (in `src/engine/state_machine.rs`) where:
+  - type State = `UtxoSet` (the on‑chain spendable outputs)
+  - type Transition = `BlockchainTransition` (enum in `src/engine/mod.rs`)
+- The single required method, `switch_state_next(starting_state, t) -> Self::State`, is where a transition is applied to produce the next UTXO state.
+- Right now `switch_state_next` is a no-op; you need to implement how each `BlockchainTransition` variant changes the `UtxoSet`.
+- Important design note: `switch_state_next` is a pure value transformation (it takes a `UtxoSet` by value and returns a new `UtxoSet`). It cannot itself mutate `BlockchainState` fields (like `blocks: HashMap<...>`) or directly return additional side-effect data (snapshots bytes, validation result, errors) without changing the trait. The caller (the engine) must coordinate those side effects.
+
+How transitions should conceptually behave
+- Init(InitRequest)
+  - Full: rebuild UTXO set by replaying stored blocks from genesis → caller should iterate stored `BlockchainState.blocks` and call `switch_state_next` with `AddBlock` for each block, or call a dedicated reindex routine that constructs a fresh `UtxoSet`.
+  - Snapshot: expect the caller to ask for serialized snapshot or restore from it; by itself, `Init(Snapshot)` should probably be a no-op unless you add a `RestoreSnapshot` with bytes.
+  - CommencingNode: initialise minimal genesis state (create genesis UTXOs).
+- ApplyTransaction(Transaction)
+  - Validate inputs (ensure unlocking scripts verify against referenced UTXOs) and remove inputs (consuming UTXOs) then add new outputs as UTXOs.
+  - In your codebase `Transaction::create_transaction` builds unlocking scripts and `UtxoSet` exposes `remove_utxo` and `add_utxo`, so implement this using those methods.
+  - Decide whether this transition is for mempool-only (no UTXO change) or an immediate UTXO change. Given `State = UtxoSet` it makes sense for this to apply to the UTXO set (as if the tx were included). If you want mempool-only, have a separate mempool state type.
+- AddBlock(Block)
+  - For each transaction in the block, sequentially validate & apply each transaction (remove inputs, add outputs) to produce the new UTXO set.
+  - Assign deterministic UTXO ids for new outputs. The UtxoSet key type is `(u32,u32)` — you should pick a canonical mapping (suggestion below).
+- ValidateBlock(Block)
+  - Run the checks (header parent linkage, merkle/entrinsics, and per-transaction validation) but do not mutate the `UtxoSet` — `switch_state_next` can simply simulate the same operations on a cloned UtxoSet and return the original state (or return the new state only on success).
+- Reorg { removed, added }
+  - Simplest, safest implementation: rebuild `UtxoSet` by replaying the canonical chain from genesis or from a known checkpoint. Inverting blocks correctly is tricky; prefer replay unless you maintain per-block undo journals.
+- Snapshot / RestoreSnapshot
+  - Snapshot: serialize the `UtxoSet` — but because `switch_state_next` returns a `UtxoSet` only, the snapshot contents must be produced by the caller or you must change the trait to allow returning extra data (recommended).
+  - RestoreSnapshot(Vec<u8>): deserialize bytes into `UtxoSet` and return it.
+- Rollback(u64) / Finalize(u64) / Shutdown
+  - Rollback: remove N blocks from tip — typically handled by replay or undo journal.
+  - Finalize: mark older blocks as finalized (may allow pruning).
+  - Shutdown: flush state to disk and exit — mostly side-effects; switch_state_next can return the same state.
+
+Concrete implementation sketch (example)
+- Use the existing APIs:
+  - `UtxoSet::remove_utxo(utxo_id, unlocking_script)`
+  - `UtxoSet::add_utxo(utxo_id, amount, locking_script)`
+  - Transaction has `inputs: Vec<TxInput>` and `outputs: Vec<TxOutput>`.
+- Deterministic UTXO id scheme (you will need a canonical scheme because UtxoSet keys are `(u32,u32)`):
+  - Suggestion: (block_number as u32, local_output_index)
+    - local_output_index = tx_index_in_block (u32) << 16 | output_index_in_tx (u32)
+    - Or simpler: (block_number as u32, cumulative_output_counter_in_block as u32)
+  - Keep in mind `block_number` is `u64` (in header) — cast to `u32` only if you accept the 32-bit limit; otherwise change UtxoSet key type.
+
+
+
+  API/design recommendations (things you should consider changing)
+1. Return richer results and errors
+   - Current signature necessarily returns a UtxoSet only. For operations that need to return data (snapshots) or errors, change the trait to return a Result and possibly a richer outcome type:
+     - Suggested signature:
+       - `fn switch_state_next(starting: Self::State, t: &Self::Transition) -> Result<Self::State, Error>`
+       - Or: `-> Result<(Self::State, Option<TransitionOutput>), Error>` where `TransitionOutput` can hold snapshot bytes, validation reports, etc.
+2. Let the engine manage side effects
+   - Keep the `UtxoSet` mutation pure (return new state) but let the top-level engine (which owns `BlockchainState.blocks`) persist blocks, emit events, or store snapshots. That keeps separation of concerns clean.
+3. Deterministic utxo ids & types
+   - Make utxo id type robust: either expand UtxoSet key to `(u64, u32)` or use a Hash based id (HashStruct) to avoid collisions/32-bit limits.
+4. Reorg handling
+   - Maintain per-block undo data (a journal) if you want cheap reverts. Otherwise rebuild the state by replaying canonical chain on reorg or rollback.
+5. Validation logic
+   - Move cryptographic validation into `UnlockingScript::verify` (TODO in your code). Currently `verify` returns true unconditionally for `SimpleHash` — this must be implemented to avoid accepting invalid spends.
+6. Concurrency / locking
+   - The codebase uses `Arc<RwLock<UtxoSet>>` (see transaction creation/test code). Ensure the engine obtains a write lock when calling `switch_state_next` or otherwise serializes state transitions. The function itself works on a value, so acquire lock, take/clone state, call `switch_state_next`, then replace the shared state with the returned value under the write lock.
+
+Next steps I can take for you
+- Implement a concrete `AddBlock` and `ApplyTransaction` in `switch_state_next` using a chosen UTXO id mapping and error handling (I can produce a patch).
+- Change the `StateMachine` trait signature to return `Result<Self::State, Error>` and update callees to propagate errors (I can make that change and update tests).
+- Implement `UnlockingScript::verify` properly so txs are cryptographically validated.
+- Implement snapshot serialization/deserialization for `UtxoSet` with `serde`.
+
+Which of the above would you like me to do now? I can implement the `ApplyTransaction` + `AddBlock` logic first (small focused change), or I can change the trait to return `Result` (bigger, but fixes error handling).
