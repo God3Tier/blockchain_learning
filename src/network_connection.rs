@@ -9,6 +9,7 @@ pub struct Node {
 impl Node {
     pub fn new () -> Self {
         // Setup default node for the project. This will then start pinging other nodes
+        
         todo!()
     }
 

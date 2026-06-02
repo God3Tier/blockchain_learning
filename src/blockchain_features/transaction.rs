@@ -80,7 +80,7 @@ impl Transaction {
     }
     
     pub fn get_hash(&self) -> HashStruct {
-        todo!("Implement hash function for the transaction")
+        self.transaction_id.clone()
     }
 }
 
