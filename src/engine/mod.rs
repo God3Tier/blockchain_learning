@@ -14,7 +14,7 @@ use std::collections::HashMap;
 pub enum InitRequest {
     Full,
     Snapshot,
-    CommencingNode,
+    CommencingNode ,
 }
 
 /// The set of transitions the `StateMachine` can accept.
@@ -42,15 +42,45 @@ pub enum BlockchainTransition {
     Shutdown,
 }
 
-pub struct BlockchainState {
-    pub blocks: HashMap<HashStruct, Block<ForkedDigest>>,
-}
+pub struct BlockchainStateMachine;
 
-impl StateMachine for BlockchainState {
+impl StateMachine for BlockchainStateMachine {
     type State = UtxoSet; 
     type Transition = BlockchainTransition; 
 
     fn switch_state_next(starting_state: Self::State, t: &Self::Transition) -> Self::State {
+        match t {
+            BlockchainTransition::Init(initReq) => {
+                
+            }, 
+            BlockchainTransition::ApplyTransaction(transaction) => {
+                
+            }, 
+            BlockchainTransition::AddBlock(block) => {
+                
+            }, 
+            BlockchainTransition::ValidateBlock(block) => {
+            
+            }, 
+            BlockchainTransition::Reorg{removed ,added} => {
+                
+            }, 
+            BlockchainTransition::Snapshot => {
+                
+            }, 
+            BlockchainTransition::RestoreSnapshot(vec) => {
+                
+            }, 
+            BlockchainTransition::Rollback(val) => {
+            
+            }, 
+            BlockchainTransition::Finalize(val) => {
+                
+            }, 
+            BlockchainTransition::Shutdown => {
+                
+            }
+        }
         starting_state
     }
 }

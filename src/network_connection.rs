@@ -1,8 +1,8 @@
 use std::sync::Arc;
-use crate::{engine::BlockchainState, consensus_engine::forked::Forked};
+use crate::{engine::BlockchainStateMachine, consensus_engine::forked::Forked};
 
 pub struct Node {
-    pub state_machine: Arc<tokio::sync::RwLock<BlockchainState>>, 
+    pub state_machine: Arc<tokio::sync::RwLock<BlockchainStateMachine>>, 
     pub consensus_enigne: Arc<tokio::sync::RwLock<Forked>>, 
 }
 
