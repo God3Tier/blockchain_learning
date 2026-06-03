@@ -4,6 +4,7 @@ mod engine;
 mod utxo_set;
 mod consensus_engine; 
 mod network_connection;
+mod state;
 
 pub type Error = Box<dyn std::error::Error>;
 

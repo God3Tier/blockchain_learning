@@ -1,7 +1,7 @@
 use crate::blockchain_features::{hash::HashStruct, transaction::Transaction};
 
 pub struct BlockBody {
-    transactions: Vec<Transaction>,
+    pub transactions: Vec<Transaction>,
 }
 
 impl BlockBody {

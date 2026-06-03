@@ -1,6 +1,6 @@
 use sha2::{Digest, Sha256};
 
-#[derive(Debug, Default, Clone, Eq)]
+#[derive(Debug, Default, Clone, Eq, Hash)]
 pub struct HashStruct(pub [u8; 32]);
 
 impl HashStruct {

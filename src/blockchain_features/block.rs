@@ -2,12 +2,13 @@ use crate::{
     blockchain_features::hash::HashStruct,
     blockchain_features::transaction::Transaction,
     blockchain_features::{block_body::BlockBody, header::Header},
-    consensus_engine::Digest
+    consensus_engine::Digest, 
+    state::State,
 };
 
 pub struct Block<Digest> {
-    header: Header<Digest>,
-    body: BlockBody,
+    pub header: Header<Digest>,
+    pub body: BlockBody,
 }
 
 impl<D: Digest> Block<D> {
@@ -22,10 +23,10 @@ impl<D: Digest> Block<D> {
     }
 
     // TODO: Actually put the state parameter
-    pub fn child(&self, transactions: Vec<Transaction>, state: u32, consenses: D) -> Self {
+    pub fn child(&self, transactions: Vec<Transaction>, state: State, consenses: D) -> Self {
         let block_body = BlockBody::new(transactions);
         let entrinsic_root = block_body.get_hash();
-        let state_root = HashStruct::generate_hash(state.to_string());
+        let state_root = state.utxo_set.hash();
         
         Block { 
             header: self.header.child(entrinsic_root, state_root, consenses),

@@ -80,8 +80,6 @@ Concrete implementation sketch (example)
     - Or simpler: (block_number as u32, cumulative_output_counter_in_block as u32)
   - Keep in mind `block_number` is `u64` (in header) — cast to `u32` only if you accept the 32-bit limit; otherwise change UtxoSet key type.
 
-
-
   API/design recommendations (things you should consider changing)
 1. Return richer results and errors
    - Current signature necessarily returns a UtxoSet only. For operations that need to return data (snapshots) or errors, change the trait to return a Result and possibly a richer outcome type:

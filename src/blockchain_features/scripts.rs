@@ -43,7 +43,7 @@ impl UnlockingScript {
     pub fn as_bytes(&self) -> Vec<u8> {
         match self {
             UnlockingScript::SimpleHash{pubkey, signature} => {
-                signature.as_bytes().into_iter().chain(pubkey.as_bytes().iter()).map(|&a| a).collect::<Vec<u8>>()
+                signature.as_bytes().iter().chain(pubkey.as_bytes().iter()).cloned().collect::<Vec<u8>>()
             }
             UnlockingScript::Default => {
                 vec!(0)
