@@ -105,11 +105,16 @@ impl StateMachine for BlockchainStateMachine {
                     if let Some(block) = starting_state.block_map.remove(&hash) {
                         block.body.transactions.into_iter().for_each(|trans| {
                             trans.inputs.into_iter().for_each(|input| {
-                                starting_state.utxo_set.put(utxo_id);
+                                
+                            });
+                            trans.outputs.into_iter().for_each(|output| {
+                                
                             })
                         })
                     }
                 }
+
+                
                 Ok(starting_state)
             }
             BlockchainTransition::Snapshot => {
