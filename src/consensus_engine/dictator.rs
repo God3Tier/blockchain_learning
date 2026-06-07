@@ -10,6 +10,10 @@ impl Digest for Vec<u8> {
     fn genesis() -> Vec<u8> {
         Vec::new()
     }
+
+    fn as_bytes(&self) -> Vec<u8> {
+        return self.clone(); 
+    }
 }
 
 impl Consensus for Dictator {

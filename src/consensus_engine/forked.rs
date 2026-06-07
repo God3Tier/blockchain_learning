@@ -28,6 +28,13 @@ impl Digest for ForkedDigest {
     fn genesis() -> Self {
         ForkedDigest::Before(SlotDigest::genesis())
     }
+    fn as_bytes(&self) -> Vec<u8> {
+        match self {
+            ForkedDigest::Before(slot) => slot.as_bytes(), 
+            ForkedDigest::After(hybrid) => hybrid.as_bytes()
+        }
+    }
+
 }
 
 impl Consensus for Forked {       

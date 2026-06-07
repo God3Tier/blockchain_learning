@@ -9,6 +9,19 @@ pub struct GrandpaVote {
     pub sig: Vec<u8>
 }
 
+impl GrandpaVote {
+    fn as_bytes(&self) -> Vec<u8> {
+        let mut res = Vec::new();
+
+        res.extend_from_slice(&self.block_hash);
+        res.extend_from_slice(self.validator.as_bytes());
+        res.extend_from_slice(&self.sig);
+
+        res
+    }
+    
+}
+
 #[derive(Eq, PartialEq, Hash, Debug, Clone)]
 pub struct GrandpaResult {
     pub votes: Vec<GrandpaVote>,
@@ -39,5 +52,17 @@ impl GrandpaResult {
             votes, 
             resulting_hash :resulting_hash.unwrap()
         })
+    }
+
+    pub fn as_bytes(&self) -> Vec<u8> {
+        let mut res = Vec::new(); 
+        
+        for grandpa in &self.votes {
+            res.extend_from_slice(&grandpa.as_bytes())
+        }
+
+        res.extend_from_slice(&self.resulting_hash);
+
+        res
     }
 }

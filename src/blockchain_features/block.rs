@@ -6,8 +6,8 @@ use crate::{
     state::State,
 };
 
-pub struct Block<Digest> {
-    pub header: Header<Digest>,
+pub struct Block<D: Digest> {
+    pub header: Header<D>,
     pub body: BlockBody,
 }
 
@@ -23,7 +23,7 @@ impl<D: Digest> Block<D> {
     }
 
     // TODO: Actually put the state parameter
-    pub fn child(&self, transactions: Vec<Transaction>, state: State, consenses: D) -> Self {
+    pub fn child(&self, transactions: Vec<Transaction>, state: &State, consenses: D) -> Self {
         let block_body = BlockBody::new(transactions);
         let entrinsic_root = block_body.get_hash();
         let state_root = state.utxo_set.hash();

@@ -28,7 +28,14 @@ impl super::Digest for SlotDigest {
             sig: vec!()
         }
     }
-    
+
+    fn as_bytes(&self) -> Vec<u8> {
+        let mut res = Vec::new();
+        res.extend_from_slice(&self.slot.to_le_bytes());
+        res.extend_from_slice(self.public_key.as_bytes());
+        res.extend_from_slice(&self.sig);
+        res
+    }
 }
 
 

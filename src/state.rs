@@ -9,13 +9,30 @@ use std::sync::Arc;
 pub struct State {
     pub utxo_set: UtxoSet,
     pub block_map: HashMap<HashStruct, Arc<Block<ForkedDigest>>>,
+    canonical_tip: HashStruct
 }
 
 impl State {
     pub fn genesis_state() -> Self {
+        let mut block_map = HashMap::new(); 
+        let genesis_block: Block<ForkedDigest> = Block::genesis();
+        block_map.insert(genesis_block.get_hash(), genesis_block);
+        
         Self {
             utxo_set: UtxoSet::initialise(), 
-            block_map: HashMap::new()
+            block_map: HashMap::new(), 
+            canonical_tip
+        }
+    }
+
+    pub fn get_canoinical_chain(&self) -> Vec<HashStruct> {
+        let mut chain = vec![];
+
+        let mut current = self.canonical_tip.clone(); 
+
+        loop {
+            chain.push(current.clone())
+            
         }
     }
 

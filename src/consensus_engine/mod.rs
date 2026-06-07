@@ -9,10 +9,12 @@ use crate::blockchain_features::{header::Header};
 
 pub trait Digest {
     fn genesis() -> Self;  
+    fn as_bytes(&self) -> Vec<u8>;
 }
 
 impl Digest for () { 
     fn genesis() -> Self {}
+    fn as_bytes(&self) -> Vec<u8> {Vec::new()} 
 }
 
 pub trait Consensus {

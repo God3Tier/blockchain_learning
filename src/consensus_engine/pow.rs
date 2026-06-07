@@ -13,6 +13,10 @@ impl super::Digest for u64 {
     fn genesis() -> Self {
         0
     }
+
+    fn as_bytes(&self) -> Vec<u8> {
+        self.to_le_bytes().into_iter().collect()
+    }
 }
 
 impl Consensus for Pow {

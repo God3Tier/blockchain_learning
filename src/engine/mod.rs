@@ -22,7 +22,7 @@ pub enum BlockchainTransition {
     // ✅ ACCEPTED: Chain reorganization (reorg data pre-validated)
     Reorg {
         removed: Vec<HashStruct>,        // Block hashes already in our map
-        added: Vec<Block<ForkedDigest>>, // Blocks already validated
+        added: Vec<Arc<Block<ForkedDigest>>>, // Blocks already validated
     },
     
     RestoreSnapshot(Vec<u8>),
@@ -93,7 +93,7 @@ impl StateMachine for BlockchainStateMachine {
                 }
 
                 for block in added {
-                    state = BlockchainStateMachine::switch_state_next(state, BlockchainTransition::AddBlock(Arc::new(block)))?;
+                    state = BlockchainStateMachine::switch_state_next(state, BlockchainTransition::AddBlock(block))?;
                 }
                 
                 Ok(state)

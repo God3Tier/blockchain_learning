@@ -22,6 +22,17 @@ impl super::Digest for HybridDigest {
             grandpa: None
         }
     }
+    fn as_bytes(&self) -> Vec<u8> {
+        let mut res = Vec::new();
+
+        res.extend_from_slice(&self.babe_digest.as_bytes());
+        if let Some(grandpa) = &self.grandpa {
+            res.extend_from_slice(&grandpa.as_bytes())
+        }
+        
+        res
+    }
+
 }
 
 impl Hybrid {
