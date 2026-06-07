@@ -51,6 +51,10 @@ impl Transaction {
             input.unlocking_script = Some(UnlockingScript::SimpleHash{
                 pubkey: user_key.public_key, 
                 signature: user_key.sign(&transaction_id.as_bytes())
+                    .as_bytes()
+                    .into_iter()
+                    .map(|a| *a)
+                    .collect::<Vec<u8>>()
             })
         }
         

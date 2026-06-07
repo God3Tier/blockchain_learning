@@ -3,50 +3,37 @@ mod state_machine;
 use crate::{
     Error,
     blockchain_features::transaction::Transaction,
-    blockchain_features::{block::Block, hash::HashStruct},
+    blockchain_features::{block::Block, hash::HashStruct, block_body::BlockBody},
     consensus_engine::forked::ForkedDigest,
     engine::state_machine::StateMachine,
     state::State,
 };
 
+use std::sync::Arc;
+
 use std::collections::HashMap;
 
 /// Requests used during initialisation flows.
-pub enum InitRequest {
-    Full,
-    Snapshot,
-    CommencingNode,
-}
-
-/// The set of transitions the `StateMachine` can accept.
-/// Add or remove variants as your consensus and runtime require.
 pub enum BlockchainTransition {
-    /// Initialise chain state (full reindex, snapshot restore, or starting node)
-    Init(InitRequest),
-    /// Apply a transaction to the mempool/state (may be validated first)
-    ApplyTransaction(Transaction),
-    /// Add a sealed block to the chain
-    AddBlock(Block<ForkedDigest>),
-    /// Validate a block without applying it (fork choice checks)
-    ValidateBlock(Block<ForkedDigest>),
-    /// Reorganise the chain: remove a range of blocks (by their parent hashes) and apply replacements
+    // ✅ ACCEPTED: Already validated by network layer
+    ApplyTransaction(Transaction),      // Signature checked, UTXO existence pending
+    AddBlock(Arc<Block<ForkedDigest>>),       // Header checked, merkle verified
+    
+    // ✅ ACCEPTED: Chain reorganization (reorg data pre-validated)
     Reorg {
-        removed: Vec<HashStruct>,
-        added: Vec<Block<ForkedDigest>>,
+        removed: Vec<HashStruct>,        // Block hashes already in our map
+        added: Vec<Block<ForkedDigest>>, // Blocks already validated
     },
-    /// Create a serialized snapshot of the current state
-    Snapshot,
-    /// Restore state from a serialized snapshot blob
+    
     RestoreSnapshot(Vec<u8>),
-    /// Roll back N blocks
+    
+    // ✅ ACCEPTED: Simple state changes
     Rollback(u64),
-    /// Mark block number as finalized (consensus-dependent)
     Finalize(u64),
-    /// Graceful shutdown of the state machine
     Shutdown,
 }
-
 pub struct BlockchainStateMachine;
+
 
 impl StateMachine for BlockchainStateMachine {
     type State = State;
@@ -57,20 +44,10 @@ impl StateMachine for BlockchainStateMachine {
         t: Self::Transition,
     ) -> Result<Self::State, Error> {
         match t {
-            BlockchainTransition::Init(init_req) => match init_req {
-                InitRequest::Full => {
-                     Ok(starting_state)
-                }
-                InitRequest::Snapshot => {
-                     Ok(starting_state)
-                }
-                InitRequest::CommencingNode => {
-                     Ok(starting_state)
-                }
-            },
             BlockchainTransition::ApplyTransaction(trans) => {
                 for txn_in in &trans.inputs {
                     if let Some(unlocking_script) = &txn_in.unlocking_script {
+                        
                         starting_state
                             .utxo_set
                             .remove_utxo(&txn_in.utxo_id, unlocking_script)?;
@@ -87,6 +64,16 @@ impl StateMachine for BlockchainStateMachine {
                  Ok(starting_state)
             }
             BlockchainTransition::AddBlock(block) => {
+                let parent_hash = block.header.parent.clone();
+                if !starting_state.block_map.contains_key(&parent_hash) {
+                    return Err("parent block not found".into())
+                }
+
+                let computed_merkle = BlockBody::new(block.body.transactions.clone()).get_hash();
+                if computed_merkle != block.header.merkle_root {
+                   return Err("merkle root mismatch".into());
+               }
+               
                 let transactions = &block.body.transactions;
 
                 let mut end_state = starting_state;
@@ -96,31 +83,23 @@ impl StateMachine for BlockchainStateMachine {
                 end_state.block_map.insert(block.header.hash(), block);
                 Ok(end_state)
             }
-            BlockchainTransition::ValidateBlock(block) => {
-                
-                Ok(starting_state)
-            }
             BlockchainTransition::Reorg { removed, added } => {
-                for hash in removed {
-                    if let Some(block) = starting_state.block_map.remove(&hash) {
-                        block.body.transactions.into_iter().for_each(|trans| {
-                            trans.inputs.into_iter().for_each(|input| {
-                                
-                            });
-                            trans.outputs.into_iter().for_each(|output| {
-                                
-                            })
-                        })
+                let mut state = State::genesis_state(); 
+
+                for (hashstruct, block) in starting_state.block_map {
+                    if !removed.contains(&hashstruct) {
+                        state.apply_block(block)?;
                     }
                 }
 
+                for block in added {
+                    state = BlockchainStateMachine::switch_state_next(state, BlockchainTransition::AddBlock(Arc::new(block)))?;
+                }
                 
-                Ok(starting_state)
-            }
-            BlockchainTransition::Snapshot => {
-                 Ok(starting_state)
+                Ok(state)
             }
             BlockchainTransition::RestoreSnapshot(vec) => {
+                
                  Ok(starting_state)
             }
             BlockchainTransition::Rollback(val) => {
@@ -130,7 +109,8 @@ impl StateMachine for BlockchainStateMachine {
                  Ok(starting_state)
             }
             BlockchainTransition::Shutdown => {
-                 Ok(starting_state)
+                
+                Ok(starting_state)
             }
         }
         

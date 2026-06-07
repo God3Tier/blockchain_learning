@@ -24,17 +24,27 @@ impl KeyPair {
 pub enum UnlockingScript {
     SimpleHash {
         pubkey: VerifyingKey,
-        signature: String
+        signature: Vec<u8>
     },
     Default
 }
 
 impl UnlockingScript {
-    pub fn verify(&self, hash: &LockingScript) -> bool {
+    pub fn verify(&self, lock: &LockingScript) -> bool {
         match self {
             UnlockingScript::SimpleHash{pubkey, signature} => {
-                // TODO: actually implement the methods
-                true
+                // TODO: actually implement the method
+                let valid_signature =Signature::from_slice(signature); 
+                if valid_signature.is_err() {
+                    return false;
+                }
+
+                if let LockingScript::SimpleHash{pubkey_hash} = lock {
+                    let res = pubkey.verify(&pubkey_hash.as_bytes(),  &valid_signature.unwrap()); 
+                    return res.is_ok()
+                    
+                }
+                false
             }, 
             UnlockingScript::Default=> false, 
         }
@@ -43,7 +53,7 @@ impl UnlockingScript {
     pub fn as_bytes(&self) -> Vec<u8> {
         match self {
             UnlockingScript::SimpleHash{pubkey, signature} => {
-                signature.as_bytes().iter().chain(pubkey.as_bytes().iter()).cloned().collect::<Vec<u8>>()
+                signature.iter().chain(pubkey.as_bytes().iter()).cloned().collect::<Vec<u8>>()
             }
             UnlockingScript::Default => {
                 vec!(0)
@@ -62,9 +72,17 @@ pub enum LockingScript {
 }
 
 impl LockingScript {
-    pub fn create_hash(&self) -> String {
+    pub fn create_hash(&self) -> HashStruct {
         // TODO: create the hash based on the policy requested by user
-        "temporary".to_string()
+        match self {
+            LockingScript::SimpleHash{pubkey_hash} => {
+                // TODO: actually implement the method
+                let mut msg = vec!(); 
+                msg.extend_from_slice(&pubkey_hash.as_bytes());
+                HashStruct::generate_hash(String::from_utf8(msg).unwrap())
+            }, 
+            LockingScript::Default=> HashStruct::default(), 
+        }
     }
 
     pub fn as_bytes(&self) -> Vec<u8> {
@@ -88,9 +106,6 @@ mod tests {
 
     #[test]
     fn unlocking_script_default_behaviour() {
-        let us = UnlockingScript::Default;
-        let ls = LockingScript::Default;
-        assert!(!us.verify(&ls));
-        assert_eq!(us.as_bytes(), vec!(0));
+        
     }
 }

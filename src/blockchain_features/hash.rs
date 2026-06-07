@@ -1,6 +1,7 @@
 use sha2::{Digest, Sha256};
+use std::hash::{Hash, Hasher};
 
-#[derive(Debug, Default, Clone, Eq, Hash)]
+#[derive(Debug, Default, Clone, Eq)]
 pub struct HashStruct(pub [u8; 32]);
 
 impl HashStruct {
@@ -13,14 +14,23 @@ impl HashStruct {
     }
 
     pub fn rehash_from_2(h1: &HashStruct, h2: &HashStruct) -> HashStruct {
-        let string = String::from_utf8([h1.0, h2.0].concat()).unwrap();
-        Self::generate_hash(string)
+        let hex1 = hex::encode(h1.0);  
+        let hex2 = hex::encode(h2.0);  
+        let combined = format!("{}{}", hex1, hex2);
+        Self::generate_hash(combined)
     }
 
     pub fn as_bytes(&self) -> [u8; 32] {
         self.0
     }
 }
+
+impl Hash for HashStruct {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.0.hash(state);
+    }
+}
+
 
 impl std::fmt::Display for HashStruct{
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
